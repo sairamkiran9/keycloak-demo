@@ -1,9 +1,9 @@
 # Keycloak Auth Service + React Frontend
 
-[![Backend CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Backend%20CI/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci-backend.yml)
-[![Frontend CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Frontend%20CI/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci-frontend.yml)
-[![Docker Build](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Docker%20Build%20%26%20Push/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/docker-build.yml)
-[![Security](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Security%20Scanning/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/security-scan.yml)
+[![Backend CI](https://github.com/sairamkiran9/keycloak-demo/workflows/Backend%20CI/badge.svg)](https://github.com/sairamkiran9/keycloak-demo/actions/workflows/ci-backend.yml)
+[![Frontend CI](https://github.com/sairamkiran9/keycloak-demo/workflows/Frontend%20CI/badge.svg)](https://github.com/sairamkiran9/keycloak-demo/actions/workflows/ci-frontend.yml)
+[![Docker Build](https://github.com/sairamkiran9/keycloak-demo/workflows/Docker%20Build%20%26%20Push/badge.svg)](https://github.com/sairamkiran9/keycloak-demo/actions/workflows/docker-build.yml)
+[![Security](https://github.com/sairamkiran9/keycloak-demo/workflows/Security%20Scanning/badge.svg)](https://github.com/sairamkiran9/keycloak-demo/actions/workflows/security-scan.yml)
 
 A complete authentication solution with **Keycloak** as the Identity Provider, **Python/Flask** auth service, and **React** frontend.
 
