@@ -7,7 +7,9 @@ A complete authentication solution with **Keycloak** as the Identity Provider, *
 - **🔐 Keycloak Integration**: Centralized authentication with JWT tokens
 - **🐍 Python Auth Service**: Flask-based API gateway with role-based access control
 - **⚛️ React Frontend**: Modern, responsive web application
-- **🛡️ Security**: JWT validation, token refresh, protected routes
+- **📝 User Registration**: Complete user registration with validation and rate limiting
+- **🔑 User Login**: JWT-based authentication with token refresh
+- **🛡️ Security**: JWT validation, token refresh, protected routes, input sanitization
 - **🚀 Quick Setup**: Automated scripts for instant development
 - **📚 Comprehensive Docs**: Complete implementation guides
 
@@ -130,14 +132,54 @@ npm run dev
 - **Auth Service (API)**: http://localhost:5000
 - **Keycloak Admin**: http://localhost:8080 (admin/admin)
 
-## 🧪 Test Users
+## 🧪 Test Users & Registration
 
-After setting up Keycloak, create these test users:
+### Pre-created Test Users
+
+After setting up Keycloak, these test users are automatically created:
 
 | Username | Password | Roles |
 |----------|----------|-------|
 | testuser | password123 | user |
 | adminuser | admin123 | user, admin |
+
+### User Registration
+
+The application supports self-service user registration with the following validation:
+
+**Username Requirements:**
+- 3-20 characters
+- Alphanumeric, dashes, and underscores only
+- Must be unique (no duplicates)
+
+**Email Requirements:**
+- Valid RFC 5322 format
+- Must be unique (no duplicates)
+
+**Password Requirements:**
+- Minimum 8 characters
+- Must contain at least one uppercase letter
+- Must contain at least one lowercase letter
+- Must contain at least one digit
+
+**Rate Limiting:**
+- 5 registration attempts per 15 minutes per IP address
+- Returns 429 (Too Many Requests) when limit exceeded
+
+**Register Example:**
+```bash
+curl -X POST http://localhost:3000/register  # UI form
+# or via API:
+curl -X POST http://localhost:5000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "StrongPass123",
+    "firstName": "John",
+    "lastName": "Doe"
+  }'
+```
 
 ## 📁 Project Structure
 
@@ -192,6 +234,7 @@ keycloak_authservice/
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
+| `/auth/register` | POST | No | Register new user (with validation & rate limiting) |
 | `/auth/login` | POST | No | User login |
 | `/auth/refresh` | POST | No | Refresh token |
 | `/auth/logout` | POST | No | Logout user |
@@ -251,7 +294,18 @@ npm run dev
 # Test health
 curl http://localhost:5000/health
 
-# Login
+# Register new user
+curl -X POST http://localhost:5000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "SecurePass123",
+    "firstName": "John",
+    "lastName": "Doe"
+  }'
+
+# Login with credentials
 curl -X POST http://localhost:5000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "testuser", "password": "password123"}'
@@ -277,6 +331,7 @@ npm test
 
 ### Complete Guides
 
+- **[User Registration Guide](user-registration-guide.md)**: User registration feature with validation and rate limiting
 - **[Docker Deployment Guide](guide/DOCKER_DEPLOYMENT_GUIDE.md)**: Complete Docker containerization with docker-compose
 - **[Local Setup Guide](docs/local-setup-guide.md)**: Complete Keycloak + Auth Service setup
 - **[React Implementation Guide](guide/REACT_FRONTEND_IMPLEMENTATION_GUIDE.md)**: Frontend development guide
@@ -285,10 +340,12 @@ npm test
 ### Key Topics
 
 - **Automated Setup**: One-command complete setup with `./setup.sh`
+- **User Registration**: Self-service registration with validation and rate limiting
+- **User Login**: JWT-based authentication with automatic token refresh
 - **Keycloak Configuration**: Realm, clients, roles, users (automated)
 - **JWT Token Flow**: Access/refresh token handling
 - **Role-based Access**: User vs admin permissions
-- **API Security**: Protected endpoints and validation
+- **API Security**: Protected endpoints, input validation, and sanitization
 - **Frontend Integration**: React components and state management
 - **Docker Deployment**: Containerized deployment with health checks
 
@@ -300,13 +357,18 @@ npm test
 - **Token Refresh**: Automatic token renewal
 - **Role-based Access**: Server-side permission checks
 - **CORS Protection**: Configured for development
-- **Input Validation**: Request data validation
+- **Input Validation**: Comprehensive validation for registration (username, email, password strength)
+- **Input Sanitization**: HTML tag and null byte removal
+- **Rate Limiting**: 5 registration attempts per 15 minutes per IP
+- **Duplicate Prevention**: Username and email uniqueness checks
 
 ### Frontend Security
 
-- **Protected Routes**: Client-side route guards
+- **Protected Routes**: Client-side route guards with authentication checks
 - **Token Storage**: localStorage (consider httpOnly cookies for production)
 - **Auto-logout**: On token expiration or 401 errors
+- **Input Validation**: Real-time client-side validation with feedback
+- **Password Strength Indicator**: Visual feedback for password strength during registration
 - **HTTPS**: Required in production (use HTTP for dev only)
 
 ## 🚀 Deployment
@@ -498,12 +560,14 @@ curl -X POST http://localhost:5000/auth/login \
 
 ## 📈 Next Steps
 
-1. **Add More Endpoints**: Extend API with application-specific routes
-2. **Database Integration**: Replace JSON storage with PostgreSQL/MySQL
-3. **UI Enhancement**: Add Material-UI, Ant Design, or custom styling
-4. **Testing**: Add comprehensive unit and integration tests
-5. **Monitoring**: Add logging, metrics, and health checks
-6. **Documentation**: API documentation with Swagger/OpenAPI
+1. **OAuth2 Providers**: Add Google, GitHub, or other OAuth2 provider integration
+2. **Email Verification**: Add email confirmation for registration
+3. **Password Reset**: Implement forgot password / password reset functionality
+4. **Database Integration**: Replace JSON storage with PostgreSQL/MySQL (for production)
+5. **Redis Rate Limiting**: Move from in-memory to Redis for distributed rate limiting
+6. **UI Enhancement**: Add Material-UI, Ant Design, or custom styling
+7. **API Documentation**: Add Swagger/OpenAPI documentation
+8. **Monitoring & Logging**: Add structured logging and metrics collection
 
 ## 🤝 Contributing
 
