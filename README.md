@@ -93,6 +93,50 @@ This script will:
 ./cleanup.sh --full  # Stop services + remove all data
 ```
 
+### 🛠️ VS Code Dev Container (Consistent Development Environment)
+
+**Prerequisites:**
+- VS Code with [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- Docker Desktop running
+
+**Steps:**
+
+1. **Open in Dev Container:**
+   ```
+   Open VS Code → F1 → "Dev Containers: Reopen in Container"
+   ```
+
+2. **Wait for setup** (~2-3 min first time):
+   - Container builds with Python 3 + Node.js
+   - Dependencies install automatically
+   - Keycloak starts and configures
+
+3. **Start services** (open separate terminals):
+   ```bash
+   # Terminal 1: Backend
+   cd /workspace/auth-service
+   source venv/bin/activate
+   python run.py
+
+   # Terminal 2: Frontend
+   cd /workspace/frontend
+   npm run dev
+   ```
+
+**Startup Script Commands:**
+```bash
+./.devcontainer/start-services.sh all      # Setup everything
+./.devcontainer/start-services.sh status   # Check service status
+./.devcontainer/start-services.sh stop     # Stop all services
+```
+
+**Ports forwarded automatically:**
+| Port | Service |
+|------|---------|
+| 3000 | Frontend |
+| 5000 | Auth Service API |
+| 8080 | Keycloak Admin |
+
 ### Manual Setup
 
 #### 1. Backend Setup (Keycloak + Auth Service)
