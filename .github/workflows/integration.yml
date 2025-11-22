@@ -1,0 +1,65 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Compose
+      run: |
+        docker-compose --version
+        docker --version
+    
+    - name: Start services
+      run: |
+        docker-compose up -d --build
+        sleep 30
+    
+    - name: Wait for services
+      run: |
+        timeout 300 bash -c 'until curl -f http://localhost:5000/health; do sleep 5; done'
+        timeout 300 bash -c 'until curl -f http://localhost:3000; do sleep 5; done'
+        timeout 300 bash -c 'until curl -f http://localhost:8080; do sleep 5; done'
+    
+    - name: Run API tests
+      run: |
+        # Test health endpoints
+        curl -f http://localhost:5000/health
+        
+        # Test SSO providers endpoint
+        curl -f http://localhost:5000/auth/sso/providers
+        
+        # Test authentication endpoints
+        curl -X POST http://localhost:5000/auth/login \
+          -H "Content-Type: application/json" \
+          -d '{"username": "testuser", "password": "password123"}' \
+          -f
+    
+    - name: Test SSO flow
+      run: |
+        # Test SSO login URL generation
+        response=$(curl -s http://localhost:5000/auth/sso/login/google)
+        echo "$response" | grep -q "redirect_url"
+        
+        # Verify Google provider is available
+        providers=$(curl -s http://localhost:5000/auth/sso/providers)
+        echo "$providers" | grep -q "google"
+    
+    - name: Check logs
+      if: failure()
+      run: |
+        docker-compose logs auth-service
+        docker-compose logs keycloak-init
+        docker-compose logs frontend
+    
+    - name: Cleanup
+      if: always()
+      run: docker-compose down -v
