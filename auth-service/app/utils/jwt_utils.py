@@ -5,6 +5,7 @@ from flask import request, jsonify
 from app.config import Config
 from typing import Optional, Dict, Any
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,11 @@ class JWTValidator:
             roles.extend([f"{client}:{role}" for role in client_roles])
         
         return list(set(roles))
+    
+    def is_token_near_expiry(self, token_payload: dict, threshold: int = 300) -> bool:
+        """Check if token expires within threshold seconds (default 5 minutes)"""
+        exp = token_payload.get('exp', 0)
+        return (exp - time.time()) < threshold
 
 # JWT validation decorator
 def jwt_required(roles: Optional[list] = None):
@@ -126,7 +132,21 @@ def jwt_required(roles: Optional[list] = None):
             # Attach claims to request context
             request.user_claims = claims
             
-            return f(*args, **kwargs)
+            # Execute the function
+            response = f(*args, **kwargs)
+            
+            # Add refresh hint header if token is near expiry
+            if validator.is_token_near_expiry(payload):
+                if hasattr(response, 'headers'):
+                    response.headers['X-Token-Refresh-Needed'] = 'true'
+                elif isinstance(response, tuple) and len(response) >= 2:
+                    # Handle tuple response (data, status_code)
+                    from flask import make_response
+                    resp = make_response(response)
+                    resp.headers['X-Token-Refresh-Needed'] = 'true'
+                    return resp
+            
+            return response
         
         return decorated_function
     return decorator

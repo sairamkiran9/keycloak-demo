@@ -12,6 +12,8 @@ export const AuthProvider = ({ children }) => {
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
+      // Setup token refresh for existing session
+      authService.setupTokenRefresh();
     }
     setLoading(false);
   }, []);
@@ -30,6 +32,13 @@ export const AuthProvider = ({ children }) => {
     await authService.logout();
     setUser(null);
   };
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      authService.clearTokenRefresh();
+    };
+  }, []);
 
   const value = {
     user,

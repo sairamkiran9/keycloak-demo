@@ -1,6 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class AuthService {
+  constructor() {
+    this.refreshTimer = null;
+  }
+
   // Login
   async login(username, password) {
     try {
@@ -22,6 +26,9 @@ class AuthService {
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('user_info', JSON.stringify(data.user_info));
+      
+      // Setup automatic token refresh
+      this.setupTokenRefresh();
 
       return data;
     } catch (error) {
@@ -75,6 +82,8 @@ class AuthService {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear refresh timer
+      this.clearTokenRefresh();
       // Always clear local storage
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -124,6 +133,9 @@ class AuthService {
       // Update tokens
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
+      
+      // Setup next refresh
+      this.setupTokenRefresh();
 
       return data;
     } catch (error) {
@@ -201,6 +213,41 @@ class AuthService {
     }
   }
 
+  // Setup automatic token refresh
+  setupTokenRefresh() {
+    const token = this.getAccessToken();
+    if (!token) return;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = payload.exp - now;
+      const refreshTime = Math.max(timeUntilExpiry - 60, 30); // Refresh 1min before expiry, min 30s
+      
+      this.clearTokenRefresh();
+      this.refreshTimer = setTimeout(() => {
+        this.refreshToken().catch(() => this.logout());
+      }, refreshTime * 1000);
+    } catch (error) {
+      console.error('Token refresh setup error:', error);
+    }
+  }
+  
+  // Clear token refresh timer
+  clearTokenRefresh() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+  
+  // Check for refresh hint in response headers
+  checkRefreshHint(response) {
+    if (response.headers.get('X-Token-Refresh-Needed') === 'true') {
+      this.refreshToken().catch(() => this.logout());
+    }
+  }
+
   // Call protected API endpoint
   async callProtectedAPI(endpoint, options = {}) {
     try {
@@ -219,6 +266,9 @@ class AuthService {
         return this.callProtectedAPI(endpoint, options);
       }
 
+      // Check for refresh hint
+      this.checkRefreshHint(response);
+      
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'API call failed');

@@ -44,7 +44,14 @@ jobs:
         GOOGLE_CLIENT_ID: test-client-id
         GOOGLE_CLIENT_SECRET: test-client-secret
       run: |
-        python -m pytest tests/ -v --tb=short
+        python -m pytest tests/ -v --tb=short --cov=app --cov-report=xml
+    
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: auth-service/coverage.xml
     
     - name: Upload test results
       uses: actions/upload-artifact@v3

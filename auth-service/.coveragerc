@@ -1,0 +1,8 @@
+[run]
+branch = True
+source = app/
+omit =
+    */__init__.py
+    */__pycache__/*
+    auth-service/tests/*
+    auth-service/venv/*
